@@ -1,0 +1,71 @@
+---
+title: "2019 Canadian Federal Election"
+subtitle: "....."
+author: "Yijie Zhao"
+date: "22 December 2020"
+abstract: |
+  | ...abstract
+  |
+  | **Keywords:** 2019 Canadian Federal Election; Liberal; Turnout; Multilevel Regression with Post-stratification.
+output: pdf_document
+bibliography: references.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Introduction
+
+
+
+
+
+# Data
+
+Also bills and their average (Figure \@ref(fig:billssssss)). (Notice how you can change the height and width so they don't take the whole page?)
+
+## ces2019 data
+
+why cps19_votechoice as response variable? why not cps19_v_likely,cps19_vote_unlikely,cps19_vote_lean,cps19_v_advance?
+sample size
+other explanatory choosing
+
+# Model
+
+\begin{equation}
+Pr(\theta | y) = \frac{Pr(y | \theta) Pr(\theta)}{Pr(y)}  (\#eq:bayes)
+\end{equation}
+
+Equation \@ref(eq:bayes) seems useful, eh?
+
+Here's a dumb example of how to use some references: In paper we run our analysis in `R` [@citeR]. We also use the `tidyverse` which was written by @thereferencecanbewhatever If we were interested in baseball data then @citeLahman could be useful. 
+
+
+# Results
+
+# Discussion
+
+## First discussion point
+
+If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
+
+## Second discussion point
+
+## Third discussion point
+
+## Weaknesses and next steps
+
+Weaknesses and next steps should also be included.
+
+\newpage
+
+# Appendix
+
+Code and data are available at: LINK.
+
+\newpage
+
+# References
+
