@@ -2,17 +2,10 @@
 title: "Liberal Might Win 31.80% of Popular Votes with 100% Turnout Rate"
 author: "Yijie Zhao"
 date: "22 December 2020"
-abstract: |
-  | Turnout rate has been always playing an important role in democratic 
-  election system. In this paper, we are going to figure out what outcome
-  would occur if every qualified voters voted in 2019 Canadian Federal election.
-  We will use multilevel regression with post-stratification techniques to 
-  estimate the vote share that Liberal would win if the turnout rate is 100%.
-  We will also discuss about the importance of turnout rate at last.
-  |
-  | **Keywords:** 2019 Canadian Federal Election; Liberal; Turnout; Multilevel 
-  Regression with Post-stratification.
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
 bibliography: references.bib
 ---
 
@@ -34,9 +27,19 @@ library(kableExtra)
 ```
 
 
+# Abstract
+
+Turnout rate has been always playing an important role in democratic election system. In this paper, we are going to figure out what outcome would occur if every qualified voters voted in 2019 Canadian Federal election. We will use multilevel regression with post-stratification techniques to estimate the vote share that Liberal would win if the turnout rate is 100%. We will also discuss about the importance of turnout rate at last.
+
+**Keywords:** Federal Election; Liberal; Turnout; Multilevel Regression with Post-stratification.
+
+
 # Introduction
 
+In 2019 Canadian federal election, Trudeau won his re-election and Liberal Party continued to be the party in power. However, even though the Liberal has won the federal election, they did not achieve a complete victory. They won less vote share of popular votes than the Conservative. Also, they did not won majority seats. The end result was that the Liberal party formed a minority government. If the turnout rate was 100% in 2019 Canadian federal election, will the results be different for Liberal?
 
+In this paper, I use two sets of data, one is 2019 CES survey data, which is completely about the 2019 Canadian federal election; the other is 2016 Canadian census data, which should be representative enough to represent the population of Canada. I will first load and clean these two datasets, and choose some demographic variables that I think matters the vote intention of individuals. I will talk about the source, survey design and import features of these two datasets in the data section. I will also draw some plots of same variables in different dataset to compare their distributions. In the model section, I will use MRP technique to build a multilevel logistics regression model based on the 2019 CES survey data and then apply this model to predict the vote intention of individuals in census data. I will compare the results with 2019 election results. At last, I will discuss further more about the use of MRP and the importance of turnout rate for democratic election system. Also, I will think about the weakness of data and model, to try to find which
+works can be improved in the future.
 
 
 
@@ -108,8 +111,6 @@ package tidyverse (@citetidyverse) and ggplot2 (@citeggplot2).
 
 
 ```{r, echo=FALSE}
-# Split page to 2x1 format
-par(mfrow=c(2,1))
 
 # Age distribution
 # Individual level survey data
@@ -191,8 +192,6 @@ From Figure 5 and Figure 6, we can figure that the distributions of respondents'
 
 
 ```{r, echo=FALSE}
-# Split page to 2x1 format
-par(mfrow=c(2,1))
 
 # working_status distribution
 # Individual level survey data
@@ -217,8 +216,7 @@ From Figure 7 and Figure 8, it is showed that the distributions of whether peopl
 
 
 ```{r, echo=FALSE}
-# Split page to 2x1 format
-par(mfrow=c(2,1))
+
 
 # income distribution
 # Individual level survey data
@@ -245,8 +243,6 @@ From Figure 9 and Figure 10, I think people with annual income level of CAD 45,0
 
 
 ```{r, echo=FALSE}
-# Split page to 2x1 format
-par(mfrow=c(2,1))
 
 # marital distribution
 # Individual level survey data
@@ -271,8 +267,6 @@ From Figure 11 and Figure 12, it is showed that the distributions of whether peo
 
 
 ```{r, echo=FALSE}
-# Split page to 2x1 format
-par(mfrow=c(2,1))
 
 # province distribution
 # Individual level survey data
@@ -386,7 +380,6 @@ The predicted overall voting share for Liberal Party is 0.3180081, which is abou
 
 
 # Weaknesses and next steps
-
 
 
 
