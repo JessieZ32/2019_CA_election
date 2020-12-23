@@ -1,18 +1,36 @@
 ---
-title: "2019 Canadian Federal Election"
-subtitle: "....."
+title: "Liberal Might Win 31.80% of Popular Votes with 100% Turnout Rate"
 author: "Yijie Zhao"
 date: "22 December 2020"
 abstract: |
-  | ...abstract
+  | Turnout rate has been always playing an important role in democratic 
+  election system. In this paper, we are going to figure out what outcome
+  would occur if every qualified voters voted in 2019 Canadian Federal election.
+  We will use multilevel regression with post-stratification techniques to 
+  estimate the vote share that Liberal would win if the turnout rate is 100%.
+  We will also discuss about the importance of turnout rate at last.
   |
-  | **Keywords:** 2019 Canadian Federal Election; Liberal; Turnout; Multilevel Regression with Post-stratification.
+  | **Keywords:** 2019 Canadian Federal Election; Liberal; Turnout; Multilevel 
+  Regression with Post-stratification.
 output: pdf_document
 bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
+# Work space setup
 knitr::opts_chunk$set(echo = TRUE)
+install.packages("tidyverse")
+install.packages("labelled")
+install.packages("car")
+install.packages("lme4")
+install.packages("broom")
+install.packages("kableExtra")
+library(tidyverse)
+library(labelled)
+library(car)
+library(lme4)
+library(broom)
+library(kableExtra)
 ```
 
 
@@ -22,50 +40,362 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 
-# Data
-
-Also bills and their average (Figure \@ref(fig:billssssss)). (Notice how you can change the height and width so they don't take the whole page?)
-
-## ces2019 data
-
-why cps19_votechoice as response variable? why not cps19_v_likely,cps19_vote_unlikely,cps19_vote_lean,cps19_v_advance?
-sample size
-other explanatory choosing
-
-# Model
-
-\begin{equation}
-Pr(\theta | y) = \frac{Pr(y | \theta) Pr(\theta)}{Pr(y)}  (\#eq:bayes)
-\end{equation}
-
-Equation \@ref(eq:bayes) seems useful, eh?
-
-Here's a dumb example of how to use some references: In paper we run our analysis in `R` [@citeR]. We also use the `tidyverse` which was written by @thereferencecanbewhatever If we were interested in baseball data then @citeLahman could be useful. 
+# 2  Data
 
 
-# Results
+```{r, include=FALSE}
+# Read cleaned 2019 CES survey data
+ces_2019 <- 
+  read_csv("/cloud/project/Inputs/data_for_analysis/ces2019_clean.csv")
+
+# Read cleaned 2016 census data
+census_2016 <- 
+  read_csv("/cloud/project/Inputs/data_for_analysis/census2016_clean.csv")
+```
+
+
+In order to figure out the influence of voter turnout on the 2019 Canadian federal election, I chose two sets of data for analyzing and modeling. One is 2019 Canadian Election Study (CES) survey data (@citeces) and the other is 2016 Canadian census data (@citecensus). In this paper, I used 2019 CES data as individual level survey data, to build model for predicting the polling of popular votes. Meanwhile, I used 2016 Canadian census data as post-stratification data, to make better estimates by adjusting the outcomes of model prediction with the population distribution. 
+
+In the following data section, I first discussed about the key points of these two data sets in the first two parts, for example, contents of survey design and data collection. Then I drew some plots of each data, to make key features of these data more intuitively visualized.
+
+
+## 2.1  Individual Level Survey Data
+
+For individual-level survey data, I used the 2019 CES survey data released by Canadian Election Study in August 17, 2020. Canadian Election Study is a study group led by Laura Stephenson et al, focusing on the research of Canadian election activities, since 1965. This study group makes surveys on every election year and collect all aspects of data related to Canadian election from their target population. I obtained the datasets of 2019 CES survey data from loading a R package named cesR (@citecesR). The CES team made two modes of survey this time, one is online survey with sample size of 37,822 and the other is phone survey with sample size of 4,021. In this analysis paper, I chose the online survey (@citeces), because it contains a much larger sample size of data than the phone survey, which can enhance representativeness of population.
+
+The population of this 2019 CES survey is all Canadian citizens and permanent residents, with age of 18 or older. Around the period of election, they made a two-wave online survey. The first wave started from September 13 to October 21, 2019, which was during the campaign period, with 37,822 interviews. The second wave started from October 24 to November 11, 2019, which was after the federal election, with 10,337 interviews. They used stratified sampling by region and sampled 37,822 respondents through Qualtrics, which provided them with the frame list of target population. As for the response rate and data quality, they got 37,822 responses in total for campaign period survey before the federal election, and among these responses, about 89.64% of responses are with high quality.
+
+I chose the data of campaign period online survey as my individual level survey data. The first reason is that the campaign period online survey sampled much more respondents than the post election survey. Second, I intended to build a prediction model for voting in 2019 federal election. Therefore, I need a response variable which represents an intention of voting or a preference of different Canadian political parties, not a variable of voting results after election. 
+
+After datasets selection, I used R (@citeR) to write scripts for cleaning this survey data. First, I removed all samples who did not have Canadian citizenship, which means they didn't have rights to vote in federal election. Among the 620 variables of this survey data, I focused on demographic variables. I selected some demographic variables and used them to create new categorical variables as explanatory variables for this analysis paper. They reason why I adjusted these original variables is because I need to make each pair of homogeneous variables exactly the same in survey data and the following census data, so that I could build prediction model by using survey data and apply model to census data successfully.
+
+The adjusted explanatory variables are showed as follows:
+
+- age_group;
+- gender;
+- education;
+- working_status;
+- income;
+- marital;
+- province
+
+I also created a new binary categorical variable named vote_Liberal, valuing 1 with "Yes" and 0 with "No".
+
+    
+## 2.2  Post-stratification Data
+
+For post-stratification data, I used the data of "Census of Canada, 2016: individual public use microdata file" (@citecensus), which is the most recent census data. The 2016 Canadian census data was collected and released by Statistics Canada in 2016. Statistics Canada holds this census program every five years. I obtained the public used microdata file of 2016 census data through library website of University of Toronto. I visited the website of CHASS data centre and downloaded the data file of 2016 census program.
+
+The target population of this 2016 census data is people lived in Canada on the reference date, May 10, 2016. The frame is a list of household addresses of individuals and households. 2016 census data collection used the wave methodology. There were 3 waves in total, which aimed at reminding people to complete survey and reducing the cases of non-response. There were three options to complete census survey, responding online, writing mailed paper questionnaire and mailing back, and contacting help line. In the past, there were one short mandatory questionnaire and one long voluntary questionnaire. Since 2011, Statistics Canada started to use only one mandatory short form and move most of questions of long form to a voluntary survey called National Household Survey. I chose the PUMF of 2016 census data. This data file was sampled in two-phase to the respondents of long form census, by systematic sampling methods. The total sample size is 930,421, which represents 2.7% of target population.
+
+As for the data quality of this census file, the sampling errors still exist obviously because this data file sampled from long form respondents, i.e., sample from samples. In this analysis paper, I assumed this census data is representative for population. As for non-response in census program, Statistics Canada changed the mandatory survey in 2015. Therefore, the response rate of 2016 census survey are extremely high, 96.6%.
+
+I used R (@citeR) to write scripts for cleaning this census data, the same as how I cleaned and prepared the survey data in the previous part. I adjusted demographic variables I chose to match the explanatory variables in survey data. The adjusted explanatory variables are showed as follows:
+
+- age_group;
+- gender;
+- education;
+- working_status;
+- income;
+- marital;
+- province
+
+
+## 2.3  Data Visualization
+
+After data cleaning, there are 18645 observations of 8 variables in the cleaned CES dataset and 668655 observations of 7 variables in the cleaned census dataset. Before building MRP model, I need to compare the differences of variable distributions of survey data and census data, in a more intuitive way. Therefore, I drew 7 pairs of plots for 7 explanatory variables that I had interested in, by using R 
+package tidyverse (@citetidyverse) and ggplot2 (@citeggplot2).
+
+
+```{r, echo=FALSE}
+# Split page to 2x1 format
+par(mfrow=c(2,1))
+
+# Age distribution
+# Individual level survey data
+ces_2019 %>% ggplot(aes(x=age_group)) +
+  geom_bar(position=position_dodge(0.7), width=0.7) +
+  labs(title="Figure 1. Age Distribution of 2019 CES Survey Data",
+       caption = "Source: Canadian Election Study",
+       x="Age Group",
+       y="Number") +
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+
+# Age distribution
+# post-stratification census data
+census_2016 %>% ggplot(aes(x=age_group)) +
+  geom_bar(position=position_dodge(0.7), width=0.7) +
+  labs(title="Figure 2. Age Distribution of 2016 Census Data",
+       caption = "Source: Statistics Canada",
+       x="Age Group",
+       y="Number") +
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+```
+
+
+From Figure 2, you can find that in census data, the age groups of 18 to 29 years old and 50 to 59 years old have the largest two portion of population. However, comparing Figure 1 with Figure 2, the proportion of 18 to 29 year-old respondents is the smallest in survey data. That indicates the young people under 30 years old are under sampled in CES survey data, compared to census data.
+
+
+```{r, echo=FALSE}
+# Split page to 2x1 format
+par(mfrow=c(2,1))
+
+# Gender distribution
+# Individual level survey data
+ces_2019 %>% ggplot(aes(x=gender)) +
+  geom_bar(position=position_dodge(0.5), width=0.5) +
+  labs(title="Figure 3. Gender Distribution of 2019 CES Survey Data",
+       caption = "Source: Canadian Election Study",
+       x="Gender",
+       y="Number") 
+
+# Gender distribution
+# post-stratification census data
+census_2016 %>% ggplot(aes(x=gender)) +
+  geom_bar(position=position_dodge(0.5), width=0.5) +
+  labs(title="Figure 4. Gender Distribution of 2016 Census Data",
+       caption = "Source: Statistics Canada",
+       x="Gender",
+       y="Number") 
+```
+
+From Figure 3 and Figure 4, it is obvious that the ratio of gender is more unbalanced in survey data than in census data. Female are over sampled and male are under sampled in 2019 CES survey data, compared with 2016 census data.
+
+
+```{r, echo=FALSE}
+# Split page to 2x1 format
+par(mfrow=c(2,1))
+
+# Education distribution
+# Individual level survey data
+ces_2019 %>% ggplot(aes(x=education)) +
+  geom_bar(position=position_dodge(0.5), width=0.5) +
+  labs(title="Figure 5. Education Distribution of 2019 CES Survey Data",
+       caption = "Source: Canadian Election Study",
+       x="Highest Degree",
+       y="Number") +
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+
+# Education distribution
+# post-stratification census data
+census_2016 %>% ggplot(aes(x=education)) +
+  geom_bar(position=position_dodge(0.5), width=0.5) +
+  labs(title="Figure 6. Education Distribution of 2016 Census Data",
+       caption = "Source: Statistics Canada",
+       x="Highest Degree",
+       y="Number") +
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+```
+
+From Figure 5 and Figure 6, we can figure that the distributions of respondents' highest degrees are totally different in two data sets. Compared to census data, people with and without high school diploma as highest degrees are both under sampled in survey data. Besides, people with bachelor's degree are obviously over sampled in CES survey data.
+
+
+```{r, echo=FALSE}
+# Split page to 2x1 format
+par(mfrow=c(2,1))
+
+# working_status distribution
+# Individual level survey data
+ces_2019 %>% ggplot(aes(x=working_status)) +
+  geom_bar(position=position_dodge(0.5), width=0.5) +
+  labs(title="Figure 7. Working Status Distribution of 2019 Survey Data",
+       caption = "Source: Canadian Election Study",
+       x="Working Status",
+       y="Number") 
+
+# working_status distribution
+# post-stratification census data
+census_2016 %>% ggplot(aes(x=working_status)) +
+  geom_bar(position=position_dodge(0.5), width=0.5) +
+  labs(title="Figure 8. Working Status Distribution of 2016 Census Data",
+       caption = "Source: Statistics Canada",
+       x="working_status",
+       y="Number") 
+```
+
+From Figure 7 and Figure 8, it is showed that the distributions of whether people worked are almost identical in survey data and census data. The number of people that are currently not working is almost half of the number of people working by the reference date.
+
+
+```{r, echo=FALSE}
+# Split page to 2x1 format
+par(mfrow=c(2,1))
+
+# income distribution
+# Individual level survey data
+ces_2019 %>% ggplot(aes(x=income)) +
+  geom_bar(position=position_dodge(0.5), width=0.5) +
+  labs(title="Figure 9. Income Distribution of 2019 CES Survey Data",
+       caption = "Source: Canadian Election Study",
+       x="Annual Income",
+       y="Number") +
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+
+# income distribution
+# post-stratification census data
+census_2016 %>% ggplot(aes(x=income)) +
+  geom_bar(position=position_dodge(0.5), width=0.5) +
+  labs(title="Figure 10. Income Distribution of 2016 Census Data",
+       caption = "Source: Statistics Canada",
+       x="income",
+       y="Number") +
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+```
+
+From Figure 9 and Figure 10, I think people with annual income level of CAD 45,000 to $89,999 are over sampled, while other four groups of different annual income level are under sampled, relatively. But the income distributions of both data follow a pretty same distributed pattern.
+
+
+```{r, echo=FALSE}
+# Split page to 2x1 format
+par(mfrow=c(2,1))
+
+# marital distribution
+# Individual level survey data
+ces_2019 %>% ggplot(aes(x=marital)) +
+  geom_bar(position=position_dodge(0.5), width=0.5) +
+  labs(title="Figure 11. Marital Distribution of 2019 CES Survey Data",
+       caption = "Source: Canadian Election Study",
+       x="Marital Status",
+       y="Number")
+
+# marital distribution
+# post-stratification census data
+census_2016 %>% ggplot(aes(x=marital)) +
+  geom_bar(position=position_dodge(0.5), width=0.5) +
+  labs(title="Figure 12. Marital Distribution of 2016 Census Data",
+       caption = "Source: Statistics Canada",
+       x="Marital Status",
+       y="Number") 
+```
+
+From Figure 11 and Figure 12, it is showed that the distributions of whether people are currently married are almost identical in survey data and census data. The number of people that are currently married is twice as the number of people who are single by the reference date.
+
+
+```{r, echo=FALSE}
+# Split page to 2x1 format
+par(mfrow=c(2,1))
+
+# province distribution
+# Individual level survey data
+ces_2019 %>% ggplot(aes(x=province)) +
+  geom_bar(position=position_dodge(0.5), width=0.5) +
+  labs(title="Figure 13. Province Distribution of 2019 CES Survey Data",
+       caption = "Source: Canadian Election Study",
+       x="Province",
+       y="Number") +
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+
+# province distribution
+# post-stratification census data
+census_2016 %>% ggplot(aes(x=province)) +
+  geom_bar(position=position_dodge(0.5), width=0.5) +
+  labs(title="Figure 14. Province Distribution of 2016 Census Data",
+       caption = "Source: Statistics Canada",
+       x="Province",
+       y="Number") +
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+```
+
+From Figure 13 and Figure 14, it is showed that the distributions of which province people are currently living are almost identical in survey data and census data. The rank of provinces in terms of population is Ontario, Quebec, British Columbia and Alberta. The proportion of population in other province and territory is really small.
+
+
+
+# 3  Model
+
+After discussing the differences between distributions of each pair of explanatory variables in survey data and census data, I found it appropriate to build a logistics regression model to predict the probability that a voter would like to vote for Liberal Party in 2019 Canadian federal election, with explanatory variables of age, gender, education, working status, income, marital status and province. I used the 2019 CES survey data to build this model. However, as we all know, a single level of logistics regression model may not best fit the survey data, because there are obvious and huge differences between individuals, in terms of the 7 demographic variables; besides, some individuals also have something in common. Therefore, building a multilevel logistics regression model can solve this problem.
+
+First, I need to choose a region or cell to divide individuals into several groups and individuals in the same group have something in common. I chose province as the cell of this multilevel model for 2 reasons. The one reason is that the province is a sort of natural group, which is not man-made. The second reason is that we usually hear that some certain provinces are the traditional stronghold of a political party. Grouping by province can hold the traditions consistent.
+
+I built a multilevel logistics regression model as follows:
+$$\frac{p_{ij}}{1-p_{ij}}=exp(\beta_{0j}+\beta_{1j}x_{1ij}+\beta_{2}x_{2i}+
+\beta_{3}x_{3i}+\beta_{4}x_{4i}+\beta_{5}x_{5i}+\beta_{6}x_{6i}+\epsilon_{ij})$$
+with a random intercept and one random coefficient. 
+
+The j represents group, i.e., province j, where j can value 1 to 11, as there are 11 provinces or territories in total. Then we get 11 different logistics regression model with different intercept term $\beta_{0}$ and coefficient $\beta_{1}$ for 11 provinces. The i represents the i'th observations in group j. The fraction $\frac{p_{ij}}{1-p_{ij}}$ represents the odds and $x_{2-6}$ represents gender, age group, education, working status, income and marital status respectively. And the $\epsilon$ represents error term.
+
+I used R package lme4 (@citelme4) to build the MR model and summarize the model outputs. 
+
+```{r, include=FALSE}
+# Build multilevel logistics regression model
+model_mr <- glmer(
+  vote_Liberal~(1+gender|province)+age_group+education+working_status+income+
+    marital, data=ces_2019, family=binomial)
+
+# Summarize model outputs
+summary(model_mr)
+```
+
+```{r, include=FALSE}
+coef(model_mr)
+```
+
+Given the R outputs of modeling, one of the multilevel logistics regression models are showed as follows.
+
+for example, the regression model of province Alberta is:
+$$\frac{p_{i}}{1-p_{i}}=exp(-1.3397905+0.13980249Male_i+0.1205704Age_{30-39}\\+
+0.1325729Age_{40-49}+0.1432926Age_{50-59}+0.3260491Age_{60-69}+0.2933324Age_{70+}\\-0.4084843Degree_{college}+0.03401339Degree_{grad}-0.5207438Degree_{highschool}\\-0.6417416Degree_{NoHighschool}-0.3002453Degree_{someCollege}-0.03590807Working\\
+-0.1890274Income_{200k+}-0.2542376Income_{45k-89k}-0.1612432Income_{90k-139k}\\
+-0.3161805Income_{45k-}+0.177598Marital_{single})$$
+
+
+
+# 4  Results
+
+After building the multilevel regression model, next step is post stratification. I applied the model to predict the proportions that each individual in census data may vote Liberal Party in 2019 Canadian federal election. I assumed the census data represents the overall Canadian qualified voters, and based on that assumption, the overall proportions that voters would like to vote Liberal equals the overall vote share or polling of Liberal in 2019 election, if every qualified voters participate in voting.
+
+```{r, include=FALSE}
+# post-stratification
+# apply the MR model to predict y with post-stratification census data
+# predict probs for each individual of census data
+probs <- predict(model_mr,
+             census_2016[,c("age_group","gender","education","working_status",
+                            "income","marital","province")], type="response")
+
+# combine column of probs with census dataset
+census_2016 %>% cbind(census_2016, probs)
+
+# calculate mean of probs for each province observations of census data
+vote_Liberal_census <- census_2016 %>% group_by(province) %>%
+  summarise(proportion1=n()*mean(probs)/nrow(census_2016))
+```
+
+```{r, include=FALSE}
+# probs of ces data
+probs2 <- predict(model_mr,ces_2019, type="response")
+# calculate mean of probs for each province observations of survey data
+vote_Liberal_survey <- ces_2019 %>% group_by(province) %>%
+  summarise(proportion2=n()*mean(probs2)/nrow(ces_2019))
+```
+
+```{r, include=FALSE}
+# combine two proportions of each dataset
+vote_Liberal_est <- cbind(vote_Liberal_census, vote_Liberal_survey)
+vote_Liberal_est[,-3]  # delete overlapped column
+```
+
+```{r, include=FALSE}
+# calculate overall vote share for Liberal
+sum(vote_Liberal_est$proportion1)
+sum(vote_Liberal_est$proportion2)
+```
+
+The predicted overall voting share for Liberal Party is 0.3180081, which is about 31.80% if the turnout rate is 100% that every qualified voters vote in 2019 Canadian Federal Election.
+
 
 # Discussion
 
-## First discussion point
 
-If my paper were 10 pages, then should be be at least 2.5 pages. The discussion is a chance to show off what you know and what you learnt from all this. 
 
-## Second discussion point
+# Weaknesses and next steps
 
-## Third discussion point
 
-## Weaknesses and next steps
 
-Weaknesses and next steps should also be included.
 
 \newpage
 
 # Appendix
 
-Code and data are available at: LINK.
+Code and data are available at: https://github.com/JessieZ32/2019_CA_election.
 
-\newpage
 
 # References
 
