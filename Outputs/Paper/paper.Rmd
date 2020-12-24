@@ -2,10 +2,7 @@
 title: "Liberal Might Win 31.80% of Popular Votes with 100% Turnout Rate"
 author: "Yijie Zhao"
 date: "22 December 2020"
-output:
-  html_document:
-    df_print: paged
-  pdf_document: default
+output: html_document
 bibliography: references.bib
 ---
 
@@ -16,14 +13,10 @@ install.packages("tidyverse")
 install.packages("labelled")
 install.packages("car")
 install.packages("lme4")
-install.packages("broom")
-install.packages("kableExtra")
 library(tidyverse)
 library(labelled)
 library(car)
 library(lme4)
-library(broom)
-library(kableExtra)
 ```
 
 
@@ -34,7 +27,7 @@ Turnout rate has been always playing an important role in democratic election sy
 **Keywords:** Federal Election; Liberal; Turnout; Multilevel Regression with Post-stratification.
 
 
-# Introduction
+# 1  Introduction
 
 In 2019 Canadian federal election, Trudeau won his re-election and Liberal Party continued to be the party in power. However, even though the Liberal has won the federal election, they did not achieve a complete victory. They won less vote share of popular votes than the Conservative. Also, they did not won majority seats. The end result was that the Liberal party formed a minority government. If the turnout rate was 100% in 2019 Canadian federal election, will the results be different for Liberal?
 
@@ -59,7 +52,7 @@ census_2016 <-
 
 In order to figure out the influence of voter turnout on the 2019 Canadian federal election, I chose two sets of data for analyzing and modeling. One is 2019 Canadian Election Study (CES) survey data (@citeces) and the other is 2016 Canadian census data (@citecensus). In this paper, I used 2019 CES data as individual level survey data, to build model for predicting the polling of popular votes. Meanwhile, I used 2016 Canadian census data as post-stratification data, to make better estimates by adjusting the outcomes of model prediction with the population distribution. 
 
-In the following data section, I first discussed about the key points of these two data sets in the first two parts, for example, contents of survey design and data collection. Then I drew some plots of each data, to make key features of these data more intuitively visualized.
+In the following data section, I first discussed about the key points of these two data sets in the first two parts, for example, contents of survey design and data collection. Then I drew some plots of each data, to make key features of these data more intuitively visualized. 
 
 
 ## 2.1  Individual Level Survey Data
@@ -70,7 +63,7 @@ The population of this 2019 CES survey is all Canadian citizens and permanent re
 
 I chose the data of campaign period online survey as my individual level survey data. The first reason is that the campaign period online survey sampled much more respondents than the post election survey. Second, I intended to build a prediction model for voting in 2019 federal election. Therefore, I need a response variable which represents an intention of voting or a preference of different Canadian political parties, not a variable of voting results after election. 
 
-After datasets selection, I used R (@citeR) to write scripts for cleaning this survey data. First, I removed all samples who did not have Canadian citizenship, which means they didn't have rights to vote in federal election. Among the 620 variables of this survey data, I focused on demographic variables. I selected some demographic variables and used them to create new categorical variables as explanatory variables for this analysis paper. They reason why I adjusted these original variables is because I need to make each pair of homogeneous variables exactly the same in survey data and the following census data, so that I could build prediction model by using survey data and apply model to census data successfully.
+After datasets selection, I used R (@citeR) and R package tidyverse (@citetidyverse), labelled (@citelabelled) to write scripts for cleaning this survey data. First, I removed all samples who did not have Canadian citizenship, which means they didn't have rights to vote in federal election. Among the 620 variables of this survey data, I focused on demographic variables. I selected some demographic variables and used them to create new categorical variables as explanatory variables for this analysis paper. They reason why I adjusted these original variables is because I need to make each pair of homogeneous variables exactly the same in survey data and the following census data, so that I could build prediction model by using survey data and apply model to census data successfully.
 
 The adjusted explanatory variables are showed as follows:
 
@@ -103,11 +96,12 @@ I used R (@citeR) to write scripts for cleaning this census data, the same as ho
 - marital;
 - province
 
+Besides, as the census data was collected in 2016, I should assume that there are no remarkable differences of the target population, from 2016 to 2019, in terms of population and other variables I listed in data section.
+
 
 ## 2.3  Data Visualization
 
-After data cleaning, there are 18645 observations of 8 variables in the cleaned CES dataset and 668655 observations of 7 variables in the cleaned census dataset. Before building MRP model, I need to compare the differences of variable distributions of survey data and census data, in a more intuitive way. Therefore, I drew 7 pairs of plots for 7 explanatory variables that I had interested in, by using R 
-package tidyverse (@citetidyverse) and ggplot2 (@citeggplot2).
+After data cleaning, there are 18645 observations of 8 variables in the cleaned CES dataset and 668655 observations of 7 variables in the cleaned census dataset. Before building MRP model, I need to compare the differences of variable distributions of survey data and census data, in a more intuitive way. Therefore, I drew 7 pairs of plots for 7 explanatory variables that I had interested in, by using R package tidyverse (@citetidyverse) and ggplot2 (@citeggplot2).
 
 
 ```{r, echo=FALSE}
@@ -121,7 +115,9 @@ ces_2019 %>% ggplot(aes(x=age_group)) +
        x="Age Group",
        y="Number") +
   theme(axis.text.x=element_text(angle=45,hjust=1))
+```
 
+```{r, echo=FALSE}
 # Age distribution
 # post-stratification census data
 census_2016 %>% ggplot(aes(x=age_group)) +
@@ -149,7 +145,9 @@ ces_2019 %>% ggplot(aes(x=gender)) +
        caption = "Source: Canadian Election Study",
        x="Gender",
        y="Number") 
+```
 
+```{r, echo=FALSE}
 # Gender distribution
 # post-stratification census data
 census_2016 %>% ggplot(aes(x=gender)) +
@@ -176,7 +174,9 @@ ces_2019 %>% ggplot(aes(x=education)) +
        x="Highest Degree",
        y="Number") +
   theme(axis.text.x=element_text(angle=45,hjust=1))
+```
 
+```{r, echo=FALSE}
 # Education distribution
 # post-stratification census data
 census_2016 %>% ggplot(aes(x=education)) +
@@ -201,7 +201,9 @@ ces_2019 %>% ggplot(aes(x=working_status)) +
        caption = "Source: Canadian Election Study",
        x="Working Status",
        y="Number") 
+```
 
+```{r, echo=FALSE}
 # working_status distribution
 # post-stratification census data
 census_2016 %>% ggplot(aes(x=working_status)) +
@@ -227,7 +229,9 @@ ces_2019 %>% ggplot(aes(x=income)) +
        x="Annual Income",
        y="Number") +
   theme(axis.text.x=element_text(angle=45,hjust=1))
+```
 
+```{r, echo=FALSE}
 # income distribution
 # post-stratification census data
 census_2016 %>% ggplot(aes(x=income)) +
@@ -252,7 +256,9 @@ ces_2019 %>% ggplot(aes(x=marital)) +
        caption = "Source: Canadian Election Study",
        x="Marital Status",
        y="Number")
+```
 
+```{r, echo=FALSE}
 # marital distribution
 # post-stratification census data
 census_2016 %>% ggplot(aes(x=marital)) +
@@ -277,7 +283,9 @@ ces_2019 %>% ggplot(aes(x=province)) +
        x="Province",
        y="Number") +
   theme(axis.text.x=element_text(angle=45,hjust=1))
+```
 
+```{r, echo=FALSE}
 # province distribution
 # post-stratification census data
 census_2016 %>% ggplot(aes(x=province)) +
@@ -322,19 +330,81 @@ summary(model_mr)
 coef(model_mr)
 ```
 
-Given the R outputs of modeling, one of the multilevel logistics regression models are showed as follows.
+Given the R outputs of modeling, one of the multilevel logistics regression models are showed as follows. 
 
-for example, the regression model of province Alberta is:
+(1) model of Alberta
 $$\frac{p_{i}}{1-p_{i}}=exp(-1.3397905+0.13980249Male_i+0.1205704Age_{30-39}\\+
 0.1325729Age_{40-49}+0.1432926Age_{50-59}+0.3260491Age_{60-69}+0.2933324Age_{70+}\\-0.4084843Degree_{college}+0.03401339Degree_{grad}-0.5207438Degree_{highschool}\\-0.6417416Degree_{NoHighschool}-0.3002453Degree_{someCollege}-0.03590807Working\\
 -0.1890274Income_{200k+}-0.2542376Income_{45k-89k}-0.1612432Income_{90k-139k}\\
 -0.3161805Income_{45k-}+0.177598Marital_{single})$$
 
+(2) model of British Columbia
+$$\frac{p_{i}}{1-p_{i}}=exp(-0.5582058-0.03699328Male_i+0.1205704Age_{30-39}\\+
+0.1325729Age_{40-49}+0.1432926Age_{50-59}+0.3260491Age_{60-69}+0.2933324Age_{70+}\\-0.4084843Degree_{college}+0.03401339Degree_{grad}-0.5207438Degree_{highschool}\\-0.6417416Degree_{NoHighschool}-0.3002453Degree_{someCollege}-0.03590807Working\\
+-0.1890274Income_{200k+}-0.2542376Income_{45k-89k}-0.1612432Income_{90k-139k}\\
+-0.3161805Income_{45k-}+0.177598Marital_{single})$$
+
+(3) model of Manitoba
+$$\frac{p_{i}}{1-p_{i}}=exp(-0.4765806-0.05545706Male_i+0.1205704Age_{30-39}\\+
+0.1325729Age_{40-49}+0.1432926Age_{50-59}+0.3260491Age_{60-69}+0.2933324Age_{70+}\\-0.4084843Degree_{college}+0.03401339Degree_{grad}-0.5207438Degree_{highschool}\\-0.6417416Degree_{NoHighschool}-0.3002453Degree_{someCollege}-0.03590807Working\\
+-0.1890274Income_{200k+}-0.2542376Income_{45k-89k}-0.1612432Income_{90k-139k}\\
+-0.3161805Income_{45k-}+0.177598Marital_{single})$$
+
+(4) model of New Brunswick
+$$\frac{p_{i}}{1-p_{i}}=exp(-0.1352459-0.13266754Male_i+0.1205704Age_{30-39}\\+
+0.1325729Age_{40-49}+0.1432926Age_{50-59}+0.3260491Age_{60-69}+0.2933324Age_{70+}\\-0.4084843Degree_{college}+0.03401339Degree_{grad}-0.5207438Degree_{highschool}\\-0.6417416Degree_{NoHighschool}-0.3002453Degree_{someCollege}-0.03590807Working\\
+-0.1890274Income_{200k+}-0.2542376Income_{45k-89k}-0.1612432Income_{90k-139k}\\
+-0.3161805Income_{45k-}+0.177598Marital_{single})$$
+
+(5) model of Newfoundland and Labrador
+$$\frac{p_{i}}{1-p_{i}}=exp(0.2752678-0.22552643Male_i+0.1205704Age_{30-39}\\+
+0.1325729Age_{40-49}+0.1432926Age_{50-59}+0.3260491Age_{60-69}+0.2933324Age_{70+}\\-0.4084843Degree_{college}+0.03401339Degree_{grad}-0.5207438Degree_{highschool}\\-0.6417416Degree_{NoHighschool}-0.3002453Degree_{someCollege}-0.03590807Working\\
+-0.1890274Income_{200k+}-0.2542376Income_{45k-89k}-0.1612432Income_{90k-139k}\\
+-0.3161805Income_{45k-}+0.177598Marital_{single})$$
+            
+(6) model of Northern Canada
+$$\frac{p_{i}}{1-p_{i}}=exp(-0.1717145-0.12441829Male_i+0.1205704Age_{30-39}\\+
+0.1325729Age_{40-49}+0.1432926Age_{50-59}+0.3260491Age_{60-69}+0.2933324Age_{70+}\\-0.4084843Degree_{college}+0.03401339Degree_{grad}-0.5207438Degree_{highschool}\\-0.6417416Degree_{NoHighschool}-0.3002453Degree_{someCollege}-0.03590807Working\\
+-0.1890274Income_{200k+}-0.2542376Income_{45k-89k}-0.1612432Income_{90k-139k}\\
+-0.3161805Income_{45k-}+0.177598Marital_{single})$$
+               
+(7) model of Nova Scotia
+$$\frac{p_{i}}{1-p_{i}}=exp(0.1865177-0.20545102Male_i+0.1205704Age_{30-39}\\+
+0.1325729Age_{40-49}+0.1432926Age_{50-59}+0.3260491Age_{60-69}+0.2933324Age_{70+}\\-0.4084843Degree_{college}+0.03401339Degree_{grad}-0.5207438Degree_{highschool}\\-0.6417416Degree_{NoHighschool}-0.3002453Degree_{someCollege}-0.03590807Working\\
+-0.1890274Income_{200k+}-0.2542376Income_{45k-89k}-0.1612432Income_{90k-139k}\\
+-0.3161805Income_{45k-}+0.177598Marital_{single})$$    
+             
+(8) model of Ontario
+$$\frac{p_{i}}{1-p_{i}}=exp(-0.1498536-0.12936326Male_i+0.1205704Age_{30-39}\\+
+0.1325729Age_{40-49}+0.1432926Age_{50-59}+0.3260491Age_{60-69}+0.2933324Age_{70+}\\-0.4084843Degree_{college}+0.03401339Degree_{grad}-0.5207438Degree_{highschool}\\-0.6417416Degree_{NoHighschool}-0.3002453Degree_{someCollege}-0.03590807Working\\
+-0.1890274Income_{200k+}-0.2542376Income_{45k-89k}-0.1612432Income_{90k-139k}\\
+-0.3161805Income_{45k-}+0.177598Marital_{single})$$  
+
+(9) model of Prince Edward Island
+$$\frac{p_{i}}{1-p_{i}}=exp(0.1459720-0.19627950Male_i+0.1205704Age_{30-39}\\+
+0.1325729Age_{40-49}+0.1432926Age_{50-59}+0.3260491Age_{60-69}+0.2933324Age_{70+}\\-0.4084843Degree_{college}+0.03401339Degree_{grad}-0.5207438Degree_{highschool}\\-0.6417416Degree_{NoHighschool}-0.3002453Degree_{someCollege}-0.03590807Working\\
+-0.1890274Income_{200k+}-0.2542376Income_{45k-89k}-0.1612432Income_{90k-139k}\\
+-0.3161805Income_{45k-}+0.177598Marital_{single})$$  
+                     
+(10) model of Quebec
+$$\frac{p_{i}}{1-p_{i}}=exp(-0.3117680-0.09273796Male_i+0.1205704Age_{30-39}\\+
+0.1325729Age_{40-49}+0.1432926Age_{50-59}+0.3260491Age_{60-69}+0.2933324Age_{70+}\\-0.4084843Degree_{college}+0.03401339Degree_{grad}-0.5207438Degree_{highschool}\\-0.6417416Degree_{NoHighschool}-0.3002453Degree_{someCollege}-0.03590807Working\\
+-0.1890274Income_{200k+}-0.2542376Income_{45k-89k}-0.1612432Income_{90k-139k}\\
+-0.3161805Income_{45k-}+0.177598Marital_{single})$$ 
+
+(11) model of Saskatchewan
+$$\frac{p_{i}}{1-p_{i}}=exp(-1.5435324+0.18588925Male_i+0.1205704Age_{30-39}\\+
+0.1325729Age_{40-49}+0.1432926Age_{50-59}+0.3260491Age_{60-69}+0.2933324Age_{70+}\\-0.4084843Degree_{college}+0.03401339Degree_{grad}-0.5207438Degree_{highschool}\\-0.6417416Degree_{NoHighschool}-0.3002453Degree_{someCollege}-0.03590807Working\\
+-0.1890274Income_{200k+}-0.2542376Income_{45k-89k}-0.1612432Income_{90k-139k}\\
+-0.3161805Income_{45k-}+0.177598Marital_{single})$$
+         
+                      
+                 
 
 
 # 4  Results
 
-After building the multilevel regression model, next step is post stratification. I applied the model to predict the proportions that each individual in census data may vote Liberal Party in 2019 Canadian federal election. I assumed the census data represents the overall Canadian qualified voters, and based on that assumption, the overall proportions that voters would like to vote Liberal equals the overall vote share or polling of Liberal in 2019 election, if every qualified voters participate in voting.
+After building the multilevel regression model, next step is post stratification. By using R package car (@citecar), I applied the model to predict the proportions that each individual in census data may vote Liberal Party in 2019 Canadian federal election. I assumed the census data represents the overall Canadian qualified voters, and based on that assumption, the overall proportions that voters would like to vote Liberal equals the overall vote share or polling of Liberal in 2019 election, if every qualified voters participate in voting.
 
 ```{r, include=FALSE}
 # post-stratification
@@ -345,43 +415,87 @@ probs <- predict(model_mr,
                             "income","marital","province")], type="response")
 
 # combine column of probs with census dataset
-census_2016 %>% cbind(census_2016, probs)
+census_data <- cbind(census_2016, probs)
+```
 
+
+```{r, include=FALSE}
 # calculate mean of probs for each province observations of census data
-vote_Liberal_census <- census_2016 %>% group_by(province) %>%
-  summarise(proportion1=n()*mean(probs)/nrow(census_2016))
+vote_Liberal_province <- census_data %>% group_by(province) %>%
+  summarise(proportion=mean(probs, na.rm=TRUE))
 ```
 
-```{r, include=FALSE}
-# probs of ces data
-probs2 <- predict(model_mr,ces_2019, type="response")
-# calculate mean of probs for each province observations of survey data
-vote_Liberal_survey <- ces_2019 %>% group_by(province) %>%
-  summarise(proportion2=n()*mean(probs2)/nrow(ces_2019))
-```
+The table below shows the estimated vote share of each province level for Liberal party, if every qualified voters have voted in 2019 Canadian Federal election.
+
+| Table 1. Est. vote share per province  |
+| province                  | vote share | 
+| :------------------------ | :--------: |
+| Alberta                   | 16.70%	   | 
+| British Columbia          | 28.66%     | 
+| Manitoba	                | 29.06%     |	
+| New Brunswick	            | 35.27%     |	
+| Newfoundland and Labrador	| 44.04%     |	
+| Northern Canada	          | 34.08%     |	
+| Nova Scotia	              | 42.86%     |	
+| Ontario	                  | 36.59%     |	
+| Prince Edward Island	    | 41.27%     |	
+| Quebec                    | 32.71%     |
+| Saskatchewan              | 13.81%     |
+
+From the Table 1, we can see that Newfoundland and Labrador, Nova Scotia and Prince Edward Island are the top 3 in terms of vote share for Liberal party, which are over 40%. The performance in Ontario, New Brunswick, Northern Canada and Quebec are not bad, which are between 30% and 40%. However, Liberal would win small proportion of popular vote in Saskatchewan and Alberta, which are both below 20%. Especially in Saskatchewan, the vote share of Liberal would be as low as 13.81%. 
+
+Then we calculate the overall popular vote share of Liberal through introducing the weighted average of population of each province to population of Canada. The formula is:
+$$\hat{Y}_{PS}=\frac{\sum_{j} N_{j}\hat{y_j}}{\sum_{j} N_{j}}$$
+The $$\hat{Y}_{PS}$$ represents the expected overall winning rate of popular vote for Liberal. The $$N_{j}$$ represents the weight of number of voters in province j to aggregate level of voters in Canada. The $$\hat{y_j}$$ represents the expected winning rate of popular vote for Liberal in province j. And the j indicates which province it is.
 
 ```{r, include=FALSE}
-# combine two proportions of each dataset
-vote_Liberal_est <- cbind(vote_Liberal_census, vote_Liberal_survey)
-vote_Liberal_est[,-3]  # delete overlapped column
-```
+# calculate mean of probs for each province observations of census data
+vote_Liberal_census <- census_data %>% group_by(province) %>%
+  summarise(proportion1=(n()*mean(probs)/nrow(census_data)))
 
-```{r, include=FALSE}
 # calculate overall vote share for Liberal
 sum(vote_Liberal_est$proportion1)
-sum(vote_Liberal_est$proportion2)
 ```
 
-The predicted overall voting share for Liberal Party is 0.3180081, which is about 31.80% if the turnout rate is 100% that every qualified voters vote in 2019 Canadian Federal Election.
+Using R to sum the vote share of each province in Table 1, we can conclude that the predicted overall vote share for Liberal Party is about 31.80%, if the turnout rate is 100%, which means every qualified voters had voted in 2019 Canadian Federal Election. 
 
 
-# Discussion
+# 5  Discussion
+
+## 5.1  Discussion over Results 
+
+Through the analysis above, the technique I used, which is the multilevel logistics regression model with post-stratification, indicates two results. The first one is that Liberal might have won 31.80% of popular vote if every qualified voters had voted in 2019 Canadian Federal Election. The second is that Liberal might win a lot in Newfoundland and Labrador, Nova Scotia, Prince Edward Island and Ontario, under the same circumstance, which is 44.04%, 42.86%, 41.27% and 36.59% respectively.
+
+As for the overall vote share of Liberal, Liberal actually won 33.10% of popular vote in the federal election last year, 1.3% higher than the estimated rate. That indicates that Liberal might win less if "everyone" have participated. That is to say, many people who missed voting last year are considered not in favor of Liberal Party.
+
+As for the vote share of Liberal in province level, I expect that Ontario is the stronghold of Liberal Party, because Liberal might win a high rate of popular vote if "everyone" voted, and also Ontario has the largest population and the most federal election districts. And I expect that Alberta and Saskatchewan are the strongholds of Liberal's competitors, because the Table 1 shows low vote share of Liberal in these two provinces, which can be proved by the historical data of election results in these two provinces. The actual results of popular vote for Liberal in each province are showed in the following table.
+
+| Table 2. 2019 vote share per province                   |
+| province                  | vote share | Gains & losses |
+| :------------------------ | :--------: | :------------: |
+| Alberta                   | 13.10%	   | - 3.60%        |
+| British Columbia          | 26.10%     | - 2.56%        |
+| Manitoba	                | 26.20%     | - 2.80%	      |
+| New Brunswick	            | 37.60%     | + 2.33%	      |
+| Newfoundland and Labrador	| 44.70%     | + 0.66%        |
+| Northern Canada	          | 34.08%     | + 1.22%	      |
+| Nova Scotia	              | 41.10%     | - 1.46%	      |
+| Ontario	                  | 41.40%     | + 4.81%	      |
+| Prince Edward Island	    | 43.60%     | + 2.33%	      |
+| Quebec                    | 34.20%     | + 1.49%        |
+| Saskatchewan              | 11.60%     | - 2.21%        |
+
+The "+" symbol in column "Gains & losses" represents Liberal won more in the corresponding province in the actual 2019 election. And the "-" symbol is the opposite. Comparing the vote share in table 2 with table 1, I find that if the turnout rate is 100%, Liberal might win more popular vote in 5 provinces, Alberta, BC, Manitoba, Nova Scotia and Saskatchewan. Except for Nova Scotia, other 4 provinces are the traditional strongholds of its competitor, Conservative. If "everyone" had voted, Liberal might win less in other 6 provinces or territories. Especially in its No.1 traditional stronghold, Ontario, Liberal might lose 4.81% more with 100% turnout in the election. In other word, there is a higher participation rate of voters who are in favor of Liberal in its stronghold, compared to with other parties' supporters, which makes sense.
 
 
+## 5.2  Weaknesses and Next Steps
 
-# Weaknesses and next steps
+There exist many weaknesses of this paper. First, it's the problem of data. 2019 CES survey data is fine to be less representative in a way. However, the census data might not be as representative as I expect. The aim of MRP model is trying to reduce the biases that less representative survey data makes with the step of post-stratification. That means we need a sufficiently representative data to represent the target population. As the census data I used is also sampled from the 2016 Canadian census data by Statistics Canada, it will increase the biases and reduce the representativeness anyway, no matter how fittable the sampling method they used is. Moreover, the census data I used were obtained through the 2016 Canadian census program held by Statistics Canada. The data can be considered out of time, even though I have made an assumption of no big difference about data of population from 2016 to 2019. The importance of data freshness can not be ignored.
 
+Second, it's about modeling. I used a logistics regression model as the model of individual level. The response variable is a binary categorical variable, with value 1 and 0, i.e., voting Liberal or not. Other than the two-party mode of US federal election, there are more than seven political parties as candidates in Canadian federal election. Among those parties, 4 parties are competitive, which is reflected by the number of seats that these 4 parties have. So, simply distinguishing the vote intention to 2 categories seems not so reasonable.
 
+Thus, for the future work, I will improve on these two aspects. First, I need to find a more representative dataset for year 2019. The questionnaire of 2021 Canadian census program has been published in July, 2020. Respondents will answer most of the questions based on their own situation in 2019. That will be really suitable to use as post-stratification data. Second, next time I can build a more complicated and appropriate individual-level model for the first step of MRP. For example, I can build a nominal logistics regression model with response variable that contains at least 3 categories. Using this model, I can define response variable as parties that people prefer to vote in 2019 federal election, which contains 8 categories (7 parties and others like independent candidates). Therefore, I can not only estimate the popular vote share of each party in different level, but also the federal election districts that each party might win. For the latter, I can estimate the 
+vote share of each party in each Canadian federal election districts, and based on the rule of winner-take-all, estimate the number of districts that each party might win; in other words, the number of seats in the House of Commons to the Canadian Parliament. That is to say, I can predict which party might be in power and which kind of government might be formed (majority or minority) after election, if the turnout rate were 100% in 2019 Canadian federal election.
 
 \newpage
 
@@ -391,4 +505,3 @@ Code and data are available at: https://github.com/JessieZ32/2019_CA_election.
 
 
 # References
-
