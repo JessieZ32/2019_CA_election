@@ -7,4 +7,5 @@ The scripts for data cleaning is stored in the folder Scripts. And during the cl
 
 The paper is stored in folder Outputs/Paper. The references file is also stored in this folder.
 
-There is only the rmd file of paper, because knitting to pdf, html or word format is not working due to unknown reasons.
+Note: 
+     There is only the rmd file of paper, because knitting to pdf, html or word format is not working due to unknown reasons.
