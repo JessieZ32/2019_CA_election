@@ -454,7 +454,7 @@ vote_Liberal_census <- census_data %>% group_by(province) %>%
   summarise(proportion1=(n()*mean(probs)/nrow(census_data)))
 
 # calculate overall vote share for Liberal
-sum(vote_Liberal_est$proportion1)
+sum(vote_Liberal_census$proportion1)
 ```
 
 Using R to sum the vote share of each province in Table 1, we can conclude that the predicted overall vote share for Liberal Party is about 31.80%, if the turnout rate is 100%, which means every qualified voters had voted in 2019 Canadian Federal Election. 
