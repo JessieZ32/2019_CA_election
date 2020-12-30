@@ -2,7 +2,9 @@
 title: "Liberal Might Win 31.80% of Popular Votes with 100% Turnout Rate"
 author: "Yijie Zhao"
 date: "22 December 2020"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 bibliography: references.bib
 ---
 
